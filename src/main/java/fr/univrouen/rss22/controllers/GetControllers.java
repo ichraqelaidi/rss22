@@ -25,8 +25,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.xml.sax.SAXException;
 
 import fr.univrouen.rss22.exception.ItemNotFoundException;
+import fr.univrouen.rss22.model.Feed;
 import fr.univrouen.rss22.model.Item;
-import fr.univrouen.rss22.model.Items;
+import fr.univrouen.rss22.repository.FeedRepo;
 import fr.univrouen.rss22.repository.ItemRepo;
 
 @Controller
@@ -34,7 +35,8 @@ public class GetControllers {
 
 	@Autowired
 	ItemRepo repo;
-	static Items items = new Items();
+	@Autowired
+	FeedRepo feedRepo;
 	@GetMapping(value="/rss22/resume/html")	
     public String getListRSSin(Model model) {
 	    model.addAttribute("items", repo.findAll());
@@ -42,14 +44,11 @@ public class GetControllers {
 	}
 	
 	@RequestMapping(value = "/rss22/resume/xml", produces = MediaType.APPLICATION_XML_VALUE)
-	public @ResponseBody Items getListRSSxml(Model model) 
-	  { 
-	  	for (Item item : repo.findAll()) {
-			items.getItems().add(item);
-		}
-	  	return items;
+	public @ResponseBody List<Item> getListRSSxml(Model model) 
+	  {
+	  	return repo.findAll();
 	  }
-	@GetMapping("/rss22/html/{guid}")
+	@GetMapping(value="/rss22/html/{guid}", produces = MediaType.APPLICATION_XML_VALUE)
 	public String getItemHtml(@PathVariable("guid") long guid, Model model) {
 	    Item item = repo.findById(guid)
 	      .orElseThrow(() -> new ItemNotFoundException("Invalid item Id:" + guid));
@@ -65,10 +64,11 @@ public class GetControllers {
 		model.addAttribute("item", item);
 		return item;
 	}
-	@GetMapping("/rss22/delete/{guid}")
+	@GetMapping(value="/rss22/delete/{guid}", produces = MediaType.APPLICATION_XML_VALUE)
 	public String deleteUser(@PathVariable("guid") long guid, Model model) {
 	    Item item = repo.findById(guid)
 	      .orElseThrow(() -> new ItemNotFoundException("Invalid item Id:" + guid));
+	    System.out.println(item.getFeed());
 	    repo.delete(item);
 	    return "redirect:/rss22/resume/html";
 	}

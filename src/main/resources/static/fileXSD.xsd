@@ -1,12 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <xs:schema elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
-  <xs:element name="item">
-    <xs:complexType>
+  <xs:element name="feed" type="FeedType"/>    
+    <xs:complexType name="FeedType">
+        <xs:sequence>
+              <xs:element name="title" type="xs:string" minOccurs="1" maxOccurs="1"/>
+              <xs:element name="pubDate" type="xs:date" minOccurs="1" maxOccurs="1"/>
+              <xs:element name="copyright" type="xs:string" minOccurs="1" maxOccurs="1"/>
+              <xs:element name="link" type="Link" minOccurs="1" maxOccurs="unbounded" />
+              <xs:element name="items" type="ItemsType" minOccurs="1" maxOccurs="10"/>
+        </xs:sequence>
+        <xs:attribute name="lang" type="xs:string " use="required"/>
+     </xs:complexType>
+  <xs:complexType name="ItemsType"><xs:sequence>
+        <xs:element name="item" type="ItemType"/></xs:sequence></xs:complexType >
+    <xs:complexType name="ItemType">
       <xs:sequence>
         <xs:element name="guid" type="xs:string" />
         <xs:element name="title" type="xs:string" />
-        <xs:element name="date" type="xs:dateTime" />
+        <xs:element name="published" type="xs:dateTime" />
+        <xs:element name="authors" type="AuthorsType" />
       </xs:sequence>
     </xs:complexType>
-  </xs:element>
+  <xs:complexType name="AuthorsType">
+            <xs:sequence><xs:element name="author" type="AuthorType" minOccurs="1" maxOccurs="unbounded"/> </xs:sequence>
+
+  </xs:complexType>
+   <xs:complexType name="Link" >
+              <xs:attribute name="rel" type="xs:string" use="required"/>
+              <xs:attribute name="type" type="xs:string" use="required"/>
+              <xs:attribute name="href" type="xs:string" use="required"/>
+        </xs:complexType>
+  <xs:complexType name="AuthorType">
+   <xs:sequence>
+           <xs:element name="name" type="xs:string" minOccurs="1" maxOccurs="1"/>
+           <xs:element name="email" type="xs:string" minOccurs="0" maxOccurs="1"/>
+           <xs:element name="uti" type="xs:anyURI" minOccurs="0" maxOccurs="1"/>
+   </xs:sequence>
+  </xs:complexType>
 </xs:schema>

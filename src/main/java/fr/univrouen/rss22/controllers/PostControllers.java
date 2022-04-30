@@ -4,80 +4,66 @@ package fr.univrouen.rss22.controllers;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import java.io.InputStream;
 import java.io.StringReader;
-import java.io.UncheckedIOException;
-import java.util.List;
+import java.util.Set;
 
 import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.DefaultResourceLoader;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.util.FileCopyUtils;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
-import org.w3c.dom.Document;
-import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
+import fr.univrouen.rss22.model.Author;
+import fr.univrouen.rss22.model.Feed;
 import fr.univrouen.rss22.model.Item;
+import fr.univrouen.rss22.repository.AuthorRepo;
+import fr.univrouen.rss22.repository.FeedRepo;
 import fr.univrouen.rss22.repository.ItemRepo;
 
 @Controller
 public class PostControllers {
 	@Autowired
 	ItemRepo repo;
+	@Autowired
+	FeedRepo feedRepo;
 	
-	@PostMapping("/rss22/insert")
-	  public String insertItem(@RequestParam(value = "xmlInput") String xmlInput,Model model) {
-		if (validateXMLSchema()==true) {
+	@PostMapping(value="/rss22/insert", produces = MediaType.APPLICATION_XML_VALUE)
+	  public String insertItem(@RequestParam(value = "xmlInput") String xmlInput,Model model) throws SAXException, IOException {
+		if (validateXMLSchema(xmlInput)==true) {
 			try {
-	            JAXBContext context = JAXBContext.newInstance(Item.class);
+	            JAXBContext context = JAXBContext.newInstance(Feed.class);
 	            Unmarshaller un = context.createUnmarshaller();
-	            Document doc = convertStringToXMLDoc(xmlInput);
-	            Item item1 = (Item) un.unmarshal(doc);
-	            System.out.println("item: " + item1.getTitle() + " le " + item1.getDate());
-	 	       	repo.save(item1);
-	 	       	return "acceuil";
+	            Feed feed = (Feed) un.unmarshal(new StringReader(xmlInput));
+	 	       	feedRepo.save(feed);
+	 	       return "redirect:/rss22/resume/html";
 	        } catch (JAXBException e) {
 	            e.printStackTrace();
 	        }
 		}
 	       	return "redirect:/rss22/resume/html";
 	  }
-	@PostMapping("/rss22/insert/file")
+	@PostMapping(value="/rss22/insert/file", produces = MediaType.APPLICATION_XML_VALUE)
 	  public String insertItemfile(@RequestParam("file") MultipartFile file,Model model) throws IOException {
-		if (validateXMLSchema()==true) {
+		if (validateXMLSchema(convert(file))==true) {
 			try {
 	            JAXBContext context = JAXBContext.newInstance(Item.class);
 	            Unmarshaller un = context.createUnmarshaller();
-	            Item item1 = (Item) un.unmarshal(convert(file));
-	            System.out.println("item: " + item1.getTitle() + " le " + item1.getDate());
-	 	       	repo.save(item1);
-	 	       	return "acceuil";
+	            Feed feed = (Feed) un.unmarshal(convert(file));
+	            feedRepo.save(feed);
+	 	       return "redirect:/rss22/resume/html";
 	        } catch (JAXBException e) {
 	            e.printStackTrace();
 	        }
@@ -92,37 +78,25 @@ public class PostControllers {
 		fos.close();
 		return convFile;
 	}
-	private static Document convertStringToXMLDoc(String strXMLValue) 
-    {
-      
-        try
-        {
-        	//Create a new object of DocumentBuilderFactory
-            DocumentBuilderFactory dbfactory = DocumentBuilderFactory.newInstance();
-            
-        	//Create an object DocumentBuilder to parse the specified XML Data
-            DocumentBuilder builder = dbfactory.newDocumentBuilder();
-             
-            //Parse the content to Document object
-            Document doc = builder.parse(new InputSource(new StringReader(strXMLValue)));
-            return doc;
-        } 
-        catch (Exception e) 
-        {
-            e.printStackTrace();
-        }
-        return null;
-    }
-	public static boolean validateXMLSchema(){
+	public static boolean validateXMLSchema(File file){
         try {
             SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
             Schema schema = factory.newSchema(new File("src/main/resources/static/fileXSD.xsd"));
             Validator validator = schema.newValidator();
-            validator.validate(new StreamSource(new File("src/main/resources/static/test.xml")));
+            validator.validate(new StreamSource(file));
         } catch (IOException | SAXException e) {
             System.out.println("Exception: "+e.getMessage());
             return false;
         }
         return true;
+    }
+	public static boolean validateXMLSchema(String xml) throws SAXException, IOException{
+        
+            SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+            Schema schema = factory.newSchema(new File("src/main/resources/static/fileXSD.xsd"));
+            Validator validator = schema.newValidator();
+            StringReader reader = new StringReader(xml);
+            validator.validate(new StreamSource(reader));
+            return true;
     }
 }
