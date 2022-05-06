@@ -59,7 +59,7 @@ public class PostControllers {
 	  public String insertItemfile(@RequestParam("file") MultipartFile file,Model model) throws IOException {
 		if (validateXMLSchema(convert(file))==true) {
 			try {
-	            JAXBContext context = JAXBContext.newInstance(Item.class);
+	            JAXBContext context = JAXBContext.newInstance(Feed.class);
 	            Unmarshaller un = context.createUnmarshaller();
 	            Feed feed = (Feed) un.unmarshal(convert(file));
 	            feedRepo.save(feed);

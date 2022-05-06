@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed lang="fr">
+ <title>title</title>
+<pubDate>2001-01-01</pubDate>
+<copyright>copyright</copyright>
+<link href="http://tempuri.org" rel="self" type=""/>
+<items>
+  <item>
+<guid>87654321-4321-4321-4555-210987654321</guid>
+<title>Mon 7777 article</title>
+<published>2022-05-06T10:30:00</published>
+<image>https://www.referenseo.com/wp-content/uploads/2019/03/image-attractive.jpg</image>
+<authors>
+<author><name>nametest</name></author>
+</authors>
+</item>
+ </items>
+
+</feed>
